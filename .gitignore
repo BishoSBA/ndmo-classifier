@@ -1,0 +1,10 @@
+
+# exclude everything except directory foo/bar
+/*
+!/templates
+!/lang
+!api.py
+!app.py
+!logic.py
+!README.md
+!.gitignore
