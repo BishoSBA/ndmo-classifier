@@ -3,7 +3,7 @@ import os
 import sys
 
 import pytesseract
-from pdf2image import convert_from_path
+from pdf2image import convert_from_bytes
 from api import get_classification
 
 # Path of the pdf
@@ -17,34 +17,37 @@ def move_file_by_classification(classification, file_path):
 # Recognizing text from the images using OCR
 def pdf2txt(PDF_file):
     pytesseract.pytesseract.tesseract_cmd = tesseract_loc
-    PDF_file = PDF_file
-    pdfs = glob.glob(PDF_file)
     text = ''
-    for pdf_path in pdfs:
-        pages = convert_from_path(pdf_path, poppler_path=poppler_path)
-        for pageNum, imgBlob in enumerate(pages):
-            filename = pdf_path[:-4] + '_page' + str(pageNum) + '.jpg'
-            print('saving ' + filename)
-            # Save the image of the page in system
-            imgBlob.save(filename, 'JPEG')
+    pages = convert_from_bytes(PDF_file.stream.read())
+    file_name = PDF_file.filename.split('/')[-1]
+    for pageNum, imgBlob in enumerate(pages):
+        filename = file_name + '_page' + str(pageNum) + '.jpg'
+        print('saving ' + file_name)
+        # Save the image of the page in system
+        imgBlob.save(filename, 'JPEG')
 
-            text = text + pytesseract.image_to_string(filename, lang='eng+ara', config=f'--psm 3')
-
-        # text = text.replace('\n', ' ')
-        f = open("playground.txt", "w")
-        f.write(text)
-        f.close()
+        text = text + pytesseract.image_to_string(filename, lang='eng+ara', config=f'--psm 3')
 
     return (text)
 
-def main(args=None):
+def classify_file(file):
     current_working_directory = os.getcwd()
     os.environ["TESSDATA_PREFIX"] = f'{current_working_directory}/lang/'
 
-    text = pdf2txt(args[0])
+    text = pdf2txt(file)
     classification = get_classification(text)
     # move_file_by_classification(classification, args[0])
     return classification
 
-if __name__ == "__main__":
-    main(sys.argv[1:])
+
+# def main(args=None):
+#     current_working_directory = os.getcwd()
+#     os.environ["TESSDATA_PREFIX"] = f'{current_working_directory}/lang/'
+
+#     text = pdf2txt(args[0])
+#     classification = get_classification(text)
+#     # move_file_by_classification(classification, args[0])
+#     return classification
+
+# if __name__ == "__main__":
+#     main(sys.argv[1:])
